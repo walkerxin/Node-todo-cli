@@ -1,28 +1,14 @@
-const fs = require('fs')
-const p = require('path')
-const homedir = require('os').homedir()
-const homePath = process.env.HOME || homedir
-const path = p.resolve(homePath, '.todo2')
+const db = require('./db.js')
 
-module.exports.add = (taskName) => {
-	fs.readFile(path, {flag: 'a+'}, (err, data) => {
-		let list;
-		try {
-			list = JSON.parse(data.toString())
-		} catch (e) {
-			list = []
-		}
-
-		list.push({title: taskName, done: false})
-		fs.writeFile(path, JSON.stringify(list) + '\n', err => {
-			if (err) {
-				console.log('write err:')
-				console.log(err)
-			}
-		})
-	})
+module.exports.add = async (taskName) => {
+	// 1. 读取文件数据
+	const list = await db.read()
+	// 2. 添加任务
+	list.push({title: taskName, done: false})
+	// 3. 保存数据到DB
+	await db.write(list)
 }
 
-module.exports.clear = () => {
-	fs.writeFile(path, JSON.stringify([]), err => {})
+module.exports.clear = async () => {
+	await db.write([])
 }
